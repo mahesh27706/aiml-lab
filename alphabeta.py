@@ -1,51 +1,52 @@
-pruned_nodes = []  # Global list to store pruned nodes  
+pruned_nodes = []
 
-def minimax(node, depth, alpha, beta, maximizingPlayer):  
-    global pruned_nodes  
-    if depth == 0 or isinstance(node, int):  
-        return node  
+def minimax(node, depth, alpha, beta, maximizing):
+    if depth == 0:
+        return node
 
-    if maximizingPlayer:  
-        maxEva = float('-inf')  
-        for child in node:  
-            eva = minimax(child, depth - 1, alpha, beta, False)  
-            maxEva = max(maxEva, eva)  
-            alpha = max(alpha, maxEva)  
-            if beta <= alpha:  
-                pruned_nodes.append(eva)  # Append the pruned node  
-                break  
-        return maxEva  
+    if maximizing:
+        best = float('-inf')
 
-    else:  
-        minEva = float('inf')  
-        for child in node:  
-            eva = minimax(child, depth - 1, alpha, beta, True)  
-            minEva = min(minEva, eva)  
-            beta = min(beta, minEva)  
-            if beta <= alpha:  
-                pruned_nodes.append(eva)  # Append the pruned node  
-                break  
-        return minEva  
+        for i, child in enumerate(node):
+            value = minimax(child, depth - 1, alpha, beta, False)
+            best = max(best, value)
+            alpha = max(alpha, best)
 
-def build_tree(flat_tree, depth):  
-    """Convert a flat array into a nested tree structure."""  
-    if depth == 0:  
-        return flat_tree.pop(0)  
-    children = []  
-    for _ in range(2):  
-        children.append(build_tree(flat_tree, depth - 1))  
-    return children  
+            if alpha >= beta:
+                pruned_nodes.extend(node[i+1:])
+                break
 
-# Input  
-flattened_tree = list(map(int, input("Enter the flattened game tree (space-separated): ").split()))  
-depth = int(input("Enter the depth of the tree: "))  
+        return best
 
-# Build the tree  
-game_tree = build_tree(flattened_tree, depth)  
+    else:
+        best = float('inf')
 
-# Evaluate the tree and track pruned nodes  
-evaluated_value = minimax(game_tree, depth, alpha=float('-inf'), beta=float('inf'), maximizingPlayer=True)  
+        for i, child in enumerate(node):
+            value = minimax(child, depth - 1, alpha, beta, True)
+            best = min(best, value)
+            beta = min(beta, best)
 
-# Output  
-print("Evaluated Value:", evaluated_value)  
+            if beta <= alpha:
+                pruned_nodes.extend(node[i+1:])
+                break
+
+        return best
+
+
+def build_tree(values, depth):
+    if depth == 0:
+        return values.pop(0)
+
+    return [build_tree(values, depth-1),
+            build_tree(values, depth-1)]
+
+
+values = list(map(int, input("Enter leaf values: ").split()))
+depth = int(input("Enter depth: "))
+
+tree = build_tree(values, depth)
+
+result = minimax(tree, depth, float('-inf'), float('inf'), True)
+
+print("Evaluated Value:", result)
 print("Pruned Nodes:", pruned_nodes)
